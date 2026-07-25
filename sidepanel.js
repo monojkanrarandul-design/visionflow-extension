@@ -21,54 +21,40 @@ recognition.onresult=async (event)=>{
     const command=event.results[0][0].transcript;
     statusDiv.innertext=`You said: ${command}`;
 
-    // 1. Get current  active tab
-    const [tab]=await chrome.tabs.query({active:true,currentWindow:true});
+    // 1. Get current  active tab in FireFox
+    const tabs=await chrome.tabs.query({active:true,currentWindow:true});
+    const activeTab=tabs[0];
 
-    // 2. Execute script on page to scrape inputs
-    const [{result: pageContext}]=await chrome.scripting.executeScript({
-        target:{tabId: tab.Id},
-        func:()=>{
-            const inputs = Array.from(document.querySelectorAll('input, button, textarea, select')).map((el,i)=>({
-                index:i,
-                tag:el.tagName,
-                type:el.type || '',
-                placeholder:el.placeholder || '',
-                id: el.id || '',
-                label: el.labels?.[0]?.innerText || el.innerText || ''
-            }));
-            return inputs;
-        }
-    });
-
-    // 3. Process action (Mocked LLM mapping for demo reliability)
+    if(!activeTab) return;
     speak(`Processing command: ${command}`);
 
-    //Send execution command to content script
-    chrome.scripting.executeScript({
-        target:{tabId: tab.id},
-        func: executeUseraction,
-        args: [command,pageContext]
+    // 2. Inject and execute action script on the web page Firefox MV2 style
+    const codeToInject=`(${executeUserAction.toString()})("${command.replace(/"/g,'\\"')}")`;
+    browser.tabs.executeScript(activeTab.id,{
+        code: codeToInject
     });
 };
 
 //Injected function executed directly on the user's webpage 
-function executeUseraction(command, context){
+function executeUseraction(command){
     const lowerCmd = command.toLowerCase();
 
     //Smart matching logic (replace/Supplement with Gemini API if needed)
+    
+        
     if(lowerCmd.includes("fill name") || lowerCmd.includes("my name is")){
-        const nameInput=document.querySelector('input[name*="name"],input[placeholder*="Name"],input[id*="name"]');
-        if (nameInput){
-            const nameVal=command.split("is ").pop() || "Alex Vance";
+        const nameInput=document.querySelector('input[name="name"],input[placeholder*="Name"],input[id*="name"]');
+        if(nameInput){
+            const nameVal=command.includes("is ") ? command.split("is ").pop() : "Alex Vance";
             nameInput.value=nameVal;
-            nameInput.style.border='3px solid #22c55e';
+            nameInput.style.border="3px solid #22c55e";
         }
-        else if(lowerCmd.includes("submit") || lowerCmd.includes("click button")){
-            const btn=document.querySelector('button[type="submit"],input[type="submit"],button');
-            if(btn){
-                btn.click();
-                alert("Form submitted!");
-            }
+    }else if(lowerCmd.includes("submit") || lowerCmd.includes("click button")){
+        const btn=document.querySelector('button[type="submit"],input[type="submit"],button');
+        if(btn){
+            btn.click();
+            btn.style.border="3px solid #22c55e";
         }
     }
+        
 }
