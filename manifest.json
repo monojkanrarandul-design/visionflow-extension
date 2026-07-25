@@ -1,13 +1,11 @@
 {
-    "manifest_version": 3,
+    "manifest_version": 2,
     "name": "VisionFlow AI",
     "version": "1.0",
     "description": "Voice-guided accessible web navigation.",
-    "permissions": ["activeTab", "scripting", "sidePanel"],
-    "side_panel":{
-        "default_path": "sidepanel.html"
-    },
-    "action": {
-        "default_title": "Open VisionFlow"
+    "permissions": ["activeTab", "<all_urls>"],
+    "sidebar_action":{
+        "default_title": "VisionFlow AI",
+        "default_panel": "sidepanel.html"
     }
 }
