@@ -1,60 +1,57 @@
-const statusDiv=document.getElementById('status');
-const startBtn=document.getElementById('start-btn');
-//Initial Web Search API
-const SpeechRecognition=window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition=new SpeechRecognition();
-recognition.continuous=false;
-recognition.lang='en-US';
-//Speak text back to the user
-function speak(text){
-    window.speechSynthesis.cancel();
-    const utterance=new SpeechSynthesisUtterance(text);
-    window.speechSynthesis.speak(utterance);
+const statusDiv = document.getElementById('status');
+const startBtn = document.getElementById('start-btn');
+
+// Initialize Web Speech API
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.continuous = false;
+recognition.lang = 'en-US';
+
+function speak(text) {
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  window.speechSynthesis.speak(utterance);
 }
 
-startBtn.addEventListener('click',()=>{
-    recognition.start();
-    statusDiv.innerText='Listening...';
+startBtn.addEventListener('click', () => {
+  recognition.start();
+  statusDiv.innerText = "Listening...";
 });
 
-recognition.onresult=async (event)=>{
-    const command=event.results[0][0].transcript;
-    statusDiv.innertext=`You said: ${command}`;
+recognition.onresult = async (event) => {
+  const command = event.results[0][0].transcript;
+  statusDiv.innerText = `You said: "${command}"`;
 
-    // 1. Get current  active tab in FireFox
-    const tabs=await chrome.tabs.query({active:true,currentWindow:true});
-    const activeTab=tabs[0];
+  // 1. Get current active tab
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab) return;
 
-    if(!activeTab) return;
-    speak(`Processing command: ${command}`);
+  speak(`Processing command: ${command}`);
 
-    // 2. Inject and execute action script on the web page Firefox MV2 style
-    const codeToInject=`(${executeUserAction.toString()})("${command.replace(/"/g,'\\"')}")`;
-    browser.tabs.executeScript(activeTab.id,{
-        code: codeToInject
-    });
+  // 2. Execute user action on the webpage using Chrome Scripting API
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: executeUserAction,
+    args: [command]
+  });
 };
 
-//Injected function executed directly on the user's webpage 
-function executeUseraction(command){
-    const lowerCmd = command.toLowerCase();
+// Injected function executed directly on the active webpage
+function executeUserAction(command) {
+  const lowerCmd = command.toLowerCase();
 
-    //Smart matching logic (replace/Supplement with Gemini API if needed)
-    
-        
-    if(lowerCmd.includes("fill name") || lowerCmd.includes("my name is")){
-        const nameInput=document.querySelector('input[name="name"],input[placeholder*="Name"],input[id*="name"]');
-        if(nameInput){
-            const nameVal=command.includes("is ") ? command.split("is ").pop() : "Alex Vance";
-            nameInput.value=nameVal;
-            nameInput.style.border="3px solid #22c55e";
-        }
-    }else if(lowerCmd.includes("submit") || lowerCmd.includes("click button")){
-        const btn=document.querySelector('button[type="submit"],input[type="submit"],button');
-        if(btn){
-            btn.click();
-            btn.style.border="3px solid #22c55e";
-        }
+  if (lowerCmd.includes("fill name") || lowerCmd.includes("my name is")) {
+    const nameInput = document.querySelector('input[name*="name"], input[placeholder*="Name"], input[id*="name"]');
+    if (nameInput) {
+      const nameVal = command.includes("is ") ? command.split("is ").pop() : "Alex Vance";
+      nameInput.value = nameVal;
+      nameInput.style.border = "3px solid #22c55e";
     }
-        
+  } else if (lowerCmd.includes("submit") || lowerCmd.includes("click button")) {
+    const btn = document.querySelector('button[type="submit"], input[type="submit"], button');
+    if (btn) {
+      btn.click();
+      btn.style.border = "3px solid #22c55e";
+    }
+  }
 }
