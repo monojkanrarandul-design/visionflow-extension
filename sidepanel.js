@@ -39,19 +39,48 @@ recognition.onresult = async (event) => {
 // Injected function executed directly on the active webpage
 function executeUserAction(command) {
   const lowerCmd = command.toLowerCase();
+  //Helper to visually highlight and scroll to an element
+  function focusAndHighlight(el,value){
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus();
+    if(value !== undefined){
+      el.value=value;
+    }el.style.transition="all 0.3s ease";
+    el.style.border="4px solid #22c55e";
+    el.style.boxShadow="0 0 15px rgba(34, 197, 94, 0.7)";
 
-  if (lowerCmd.includes("fill name") || lowerCmd.includes("my name is")) {
-    const nameInput = document.querySelector('input[name*="name"], input[placeholder*="Name"], input[id*="name"]');
-    if (nameInput) {
-      const nameVal = command.includes("is ") ? command.split("is ").pop() : "Alex Vance";
-      nameInput.value = nameVal;
-      nameInput.style.border = "3px solid #22c55e";
+  }
+
+  //1. Fill Name
+  if(lowerCmd.includes("name")){
+    const input=document.querySelector('input[name="name" i],input[placeholder*="name" i],input[id*="name" i]');
+    if(input){
+      const val=command.includes("is ") ? command.split("is ").pop() : "Modi";
+      focusAndHighlight(input,val);
     }
-  } else if (lowerCmd.includes("submit") || lowerCmd.includes("click button")) {
-    const btn = document.querySelector('button[type="submit"], input[type="submit"], button');
-    if (btn) {
-      btn.click();
-      btn.style.border = "3px solid #22c55e";
+  }
+  //2. Fill Email
+  else if (lowerCmd.includes("email")){
+    const input=document.querySelector('input[type="email"],input[placeholder*="email" i]');
+    if(input){
+      const val=command.includes("is ") ? command.split("is ").pop() : "demo@visionflow.ai";
+      focusAndHighlight(input,val);
     }
+  }
+  //3. Scroll Page
+  else if(lowerCmd.includes("scroll down")){
+    window.scrollBy({top:500,behaviour:'smooth'});
+  }
+  else if(lowerCmd.includes("scroll up")){
+    window.scrollBy({top:-500,behaviour:'smooth'});
+  }
+  //4.Submit/Click
+  else if(lowerCmd.includes("submit") || lowerCmd.includes("click")){
+    const btn=document.querySelector('button[type="submit"],input[type="submit"],button');
+    if(btn){
+      focusAndHighlight(btn);
+      setTimeout(()=>btn.click(),600);
+    }
+
   }
 }
