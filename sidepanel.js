@@ -137,3 +137,13 @@ function executeUserAction(command) {
     console.warn("VisionFlow AI: No input element found on this page.");
   }
 }
+//Adding this error handler to catch permission blocks
+recognition.onerror=(event) => {
+  if(event.error==='not-allowed'){
+    statusDiv.innerText="Mic blocked! Opening setup tab...";
+    chrome.tabs.create({ url: chrome.runtime.getURL('setup.html')});
+  }
+  else{
+    statusDiv.innerText=`Error: ${event.error}. Try again.`;
+  }
+};
