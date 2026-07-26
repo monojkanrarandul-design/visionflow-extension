@@ -53,7 +53,7 @@ function executeUserAction(command) {
 
   //1. Fill Name
   if(lowerCmd.includes("name")){
-    const input=document.querySelector('input[name="name" i],input[placeholder*="name" i],input[id*="name" i]');
+    const input=document.querySelector('input[name*="name" i],input[placeholder*="name" i],input[id*="name" i],input[name="q"],textarea[name="q"],input[name="search"],input[type="search"]');
     if(input){
       const val=command.includes("is ") ? command.split("is ").pop() : "Modi";
       focusAndHighlight(input,val);
