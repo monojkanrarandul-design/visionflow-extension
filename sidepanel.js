@@ -118,6 +118,78 @@ function executeUserAction(command) {
   } else if (lowerCmd.includes("is ")) {
     queryText = command.split(/is /i).pop();
   }
+  //--- D. VIDEO CONTROL LOGIC ---
+  const video=document.querySelector('video');
+
+  if(video){
+    //1.Play/Pause/Click Video
+    if(lowerCmd.includes("play video")||lowerCmd.includes("pause")||lowerCmd.includes("click video")){
+      video.paused ? video.play() : video.pause();
+      applyGlow(video);
+      return;
+    }
+    //2. Absolute timeskip (e.g., "go to 2 minutes 30 seconds", "skip to 10 min")
+    // Catches "go to", "skip to", "time skip to"
+    if(lowerCmd.match(/(go to|skip to|time skip)/)){
+      let totalSeconds=0;
+
+      //Extract minutes and seconds using Regex
+      const minMatch=lowerCmd.match(/(\d+)\s*(m|min|minute)/);
+      const secMatch=lowerCmd.match(/(\d+)\s*(s|sec|second)/);
+
+      if(minMatch) totalSeconds+=parseInt(minMatch[1],10) * 60;
+      if(secMatch) totalSeconds+=parseInt(secMatch[1],10);
+
+      // Only execute if we  successfully parsed a time (or they explicitly asked for 0)
+      if(totalSeconds>0||lowerCmd.includes("0")){
+        video.currentTime=totalSeconds;
+        applyGlow(video);
+        return;
+      }
+    }
+    // 4. Volume Controls
+    if(lowerCmd.includes("mute")||lowerCmd.includes("volume")){
+      //Mute/Unmute
+      if(lowerCmd.includes("unmute")){
+        video.muted=false;
+      }else if(lowerCmd.includes("mute")){
+        video.muted=true;
+      }
+
+      //Volume Up/Down
+      if(lowerCmd.includes("volume up")||lowerCmd.includes("increase volume")){
+        video.muted=false;
+        video.volume=Math.min(1.0, video.volume +0.1);
+      }else if(lowerCmd.includes("volume down")||lowerCmd.includes("decrease volume")){
+        video.volume=Math.max(0.0, video.volume -0.1);
+      }
+
+      //Absolute Volume(eg: "set volume to 50", "volume 100")
+      const volMatch=lowerCmd.match(/volume.*?(\d+)/);
+      if(volMatch){
+        let targetVol=parseInt(volMatch[1], 10);
+        video.muted=false;
+        video.volume=Math.max(0.0, Math.min(1.0, targetVol / 100));
+      }
+      applyGlow(video);
+      return;
+    }
+     //3. Relative Timeskip (e.g., skip forward 10 seconds", "go back 15 sec", "10s+")
+     if(lowerCmd.includes("forward") || lowerCmd.includes("back") || lowerCmd.includes("rewind")||lowerCmd.includes("skip")){
+      //Find the number of secons, default to 10 if they just say "skip forward"
+      const numMatch=lowerCmd.match(/(\d+)/);
+      const skipAmount=numMatch ? parseInt(numMatch[1], 10) : 10;
+
+      //Determine Direction
+      if(lowerCmd.includes("back")||lowerCmd.includes("rewind")||lowerCmd.includes("-")){
+        video.currentTime-=skipAmount;  
+      }else{
+        video.currentTime+=skipAmount;
+      }
+      applyGlow(video);
+      return;
+     }
+  }
 
   // Find ANY visible input element on the page
   const allInputs = Array.from(document.querySelectorAll('input:not([type="hidden"]), textarea:not([type="hidden"])'));
