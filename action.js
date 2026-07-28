@@ -27,7 +27,7 @@ export function executeUserAction(command) {
   }
 
   // --- B. SUBMIT / CLICK LOGIC ---
-  if (lowerCmd.includes("submit") || lowerCmd.includes("click") || lowerCmd.includes("enter")) {
+  if (lowerCmd.includes("submit") || lowerCmd==="click" || lowerCmd.includes("enter")) {
     const btn = document.querySelector('button[type="submit"], input[type="submit"], button.searchButton, button');
     if (btn) {
       applyGlow(btn);
@@ -42,7 +42,7 @@ export function executeUserAction(command) {
   }
 
   // --- C. VIDEO CONTROL LOGIC ---
-  const video = Array.from(document.querySelectorAll('video')).find(v=>v.readyState > 0 || v.offsetHeight > 0);
+  const video = Array.from(document.querySelectorAll('video')).find(v=>v.offsetWidth > 0);
   
   if (video) {
     // 1. Play / Pause
@@ -109,8 +109,8 @@ export function executeUserAction(command) {
   } 
   // 5. Thumbnail Fallback (For YouTube Search Result Pages)
   else if (!video && (lowerCmd.includes("play") || lowerCmd.includes("click video"))) {
-    const thumbnail = document.querySelector('a#video-title, a#thumbnail[href^="/watch"]');
-    if (thumbnail) {
+    const thumbnail=document.querySelector('a#thumbnail[href*="/watch"]');
+    if(thumbnail){
       applyGlow(thumbnail);
       setTimeout(() => thumbnail.click(), 500);
       return;
