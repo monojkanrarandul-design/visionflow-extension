@@ -1,4 +1,4 @@
-import { executeUserAction } from './actions.js';
+import { executeUserAction } from './action.js';
 
 const statusDiv = document.getElementById('status');
 const startBtn = document.getElementById('start-btn');
