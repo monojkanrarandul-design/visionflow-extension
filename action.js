@@ -42,7 +42,7 @@ export function executeUserAction(command) {
   }
 
   // --- C. VIDEO CONTROL LOGIC ---
-  const video = document.querySelector('video');
+  const video = Array.from(document.querySelector('video')).find(v=>v.offsetWidth > 0);
   
   if (video) {
     // 1. Play / Pause
@@ -92,9 +92,9 @@ export function executeUserAction(command) {
       
       if (lowerCmd.includes("volume up") || lowerCmd.includes("increase volume")) {
         video.muted = false;
-        video.volume = Math.min(1.0, video.volume + 0.1);
+        video.volume = Math.min(1.0, video.volume + 0.2);
       } else if (lowerCmd.includes("volume down") || lowerCmd.includes("decrease volume")) {
-        video.volume = Math.max(0.0, video.volume - 0.1);
+        video.volume = Math.max(0.0, video.volume - 0.2);
       }
       
       const volMatch = lowerCmd.match(/volume.*?(\d+)/);
@@ -109,7 +109,7 @@ export function executeUserAction(command) {
   } 
   // 5. Thumbnail Fallback (For YouTube Search Result Pages)
   else if (!video && (lowerCmd.includes("play") || lowerCmd.includes("click video"))) {
-    const thumbnail = document.querySelector('a#thumbnail[href^="/watch"], a.yt-simple-endpoint.ytd-video-renderer');
+    const thumbnail = document.querySelector('a#video-title, a#thumbnail[href^="/watch"]');
     if (thumbnail) {
       applyGlow(thumbnail);
       setTimeout(() => thumbnail.click(), 500);
