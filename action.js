@@ -42,7 +42,7 @@ export function executeUserAction(command) {
   }
 
   // --- C. VIDEO CONTROL LOGIC ---
-  const video = Array.from(document.querySelector('video')).find(v=>v.offsetWidth > 0);
+  const video = Array.from(document.querySelectorAll('video')).find(v=>v.readyState > 0 || v.offsetHeight > 0);
   
   if (video) {
     // 1. Play / Pause
