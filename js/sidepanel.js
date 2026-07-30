@@ -1,7 +1,7 @@
 import { executeUserAction } from './action.js';
 
-const statusDiv = document.getElementById('status');
-const startBtn = document.getElementById('start-btn');
+const statusDiv = document.querySelector('.tip');
+const startBtn = document.getElementById('startListening');
 const commandInput = document.getElementById('command-input');
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
