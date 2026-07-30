@@ -1,4 +1,5 @@
 import { executeUserAction } from './action.js';
+import { getPageHtml } from "./tools/snapshot.js"
 
 const statusDiv = document.querySelector('.tip');
 const startBtn = document.getElementById('startListening');
@@ -41,13 +42,15 @@ async function processCommand(command) {
 }
 
 // Event Listeners
-startBtn.addEventListener('click', () => {
+startBtn.addEventListener('click', async () => {
   try {
     recognition.start();
     statusDiv.innerText = "Listening...";
   } catch (e) {
     statusDiv.innerText = "Listening again...";
   }
+
+  console.log(await getPageHtml());
 });
 
 recognition.onresult = (event) => {
@@ -72,3 +75,4 @@ recognition.onerror = (event) => {
     statusDiv.innerText = `Error: ${event.error}. Try again.`;
   }
 };
+
