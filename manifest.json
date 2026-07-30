@@ -8,10 +8,23 @@
         "*://*/*"
     ],
     "side_panel":{
-        
         "default_path": "sidepanel.html"
     },
-    "action":{
-        "default_title": "Open VisionFlow"
+
+    "icons": {
+        "16": "image/icon16.png",
+        "32": "image/icon32.png",
+        "48": "image/icon32.png",
+        "128": "image/icon128.png"
+    },
+
+  "action": {
+    "default_title": "Open VisionFlow",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "image/icon16.png",
+      "32": "image/icon32.png",
+      "48": "image/icon32.png"
     }
+  }
 }
