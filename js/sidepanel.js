@@ -1,5 +1,5 @@
 import { executeUserAction } from './action.js';
-import { getPageHtml } from "./tools/snapshot.js"
+import { get_snapshot } from "./tools/snapshot.js"
 
 const statusDiv = document.querySelector('.tip');
 const startBtn = document.getElementById('startListening');
@@ -50,7 +50,7 @@ startBtn.addEventListener('click', async () => {
     statusDiv.innerText = "Listening again...";
   }
 
-  console.log(await getPageHtml());
+  console.log(await get_snapshot());
 });
 
 recognition.onresult = (event) => {

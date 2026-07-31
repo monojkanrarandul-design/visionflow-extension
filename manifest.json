@@ -27,12 +27,5 @@
       "32": "image/icon32.png",
       "48": "image/icon32.png"
     }
-  },
-
-  "content_scripts": [
-    {
-      "matches": ["*://*/*"],
-      "js": ["js/tools/pageHtml.js"]
-    }
-  ]
+  }
 }
