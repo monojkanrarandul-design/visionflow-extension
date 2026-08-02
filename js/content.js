@@ -12,3 +12,4 @@ document.addEventListener('focusin', (e) => {
 function getFullHTML() {
   return document.documentElement.outerHTML;
 }
+
