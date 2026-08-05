@@ -53,11 +53,19 @@ export async function get_snapshot() {
 
   elements.forEach(el => {
     let rawText = el.textContent?.trim() || '';
-    let text = cleanText(rawText).slice(0, 70);
+    let text = cleanText(rawText).slice(0, 20);
 
     let id = (el.id && !GENERIC_IDS.has(el.id)) ? el.id : undefined;
+    let tag = el.tagName.toLowerCase();
+    if(tag == 'p' || tag == 'h2' || tag == 'h3' || tag == 'h4' || tag == 'h5' || tag == 'h6' || tag == 'h1' || tag == 'li'){
+      id = undefined;
+    }
     let classes = getMeaningfulClasses(el.className) || undefined;
     let href = el.getAttribute('href') || undefined;
+    let hrefSliced = undefined;
+    if(href != undefined){
+      hrefSliced = href.includes("https://")? href.slice(0,150) : href.slice(0,70);
+    }
     let src = el.getAttribute('src') || undefined;
     let type = el.getAttribute('type') || undefined;
 
@@ -66,9 +74,9 @@ export async function get_snapshot() {
     if (text !== "" && hasUsefulAttr) {
       snapshot.push({
         index: i,
-        tag: el.tagName.toLowerCase(),
+        tag: tag,
         text: text,
-        attrs: { id, class: classes, href, src, type }
+        attrs: { id, class: classes, href: hrefSliced, src, type }
       });
     }
     i++;
