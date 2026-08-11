@@ -1,78 +1,32 @@
-import { executeUserAction } from './action.js';
-import { get_snapshot } from "./tools/snapshot.js"
+import { startListening, stopListening } from "./voiceInput.js";
 
 const statusDiv = document.querySelector('.tip');
 const startBtn = document.getElementById('startListening');
-const commandInput = document.getElementById('command-input');
+// const commandInput = document.getElementById('command-input');
+const container = document.querySelector(".container");
+let html = `
+  <div class="hero hero--compact">
+  <img src="image/logo.svg" alt="VisionFlow Logo" class="logo logo--small" />
+  <h1>VisionFlow</h1>
+</div>
 
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = new SpeechRecognition();
-recognition.continuous = false;
-recognition.lang = 'en-US';
+<div class="status"></div>
+<div class="markdown"></div>
 
-// Get the real browser tab (filters out extension sidepanels)
-async function getTargetTab() {
-  const tabs = await chrome.tabs.query({ currentWindow: true });
-  let activeTab = tabs.find(t => t.active && t.url && !t.url.startsWith("chrome"));
-  
-  if (!activeTab) {
-    const allTabs = await chrome.tabs.query({});
-    activeTab = allTabs.find(t => t.active && t.url && (t.url.startsWith("http://") || t.url.startsWith("https://")));
-  }
-  return activeTab;
+<button id="stopListening" class="listen-btn listen-btn--active">
+  <span class="listen-indicator">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <rect x="4" y="8" width="2.5" height="8" rx="1.25" />
+      <rect x="9" y="5" width="2.5" height="14" rx="1.25" />
+      <rect x="14" y="7" width="2.5" height="10" rx="1.25" />
+      <rect x="19" y="9" width="2.5" height="6" rx="1.25" />
+    </svg>
+  </span>
+  <span>Listening</span>
+</button>
+`;
+
+startBtn.onclick = () => {
+    container.innerHTML = html;
+    startListening();
 }
-
-// Process Command
-async function processCommand(command) {
-  statusDiv.innerText = `Executing: "${command}"`;
-
-  const tab = await getTargetTab();
-
-  if (!tab) {
-    statusDiv.innerText = "Error: Please click on the webpage on the left!";
-    return;
-  }
-
-  // Inject script directly into target tab
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: executeUserAction,
-    args: [command]
-  });
-}
-
-// Event Listeners
-startBtn.addEventListener('click', async () => {
-  try {
-    recognition.start();
-    statusDiv.innerText = "Listening...";
-  } catch (e) {
-    statusDiv.innerText = "Listening again...";
-  }
-
-  console.log(await get_snapshot());
-});
-
-recognition.onresult = (event) => {
-  const command = event.results[0][0].transcript;
-  processCommand(command);
-};
-
-if (commandInput) {
-  commandInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      processCommand(commandInput.value);
-      commandInput.value = '';
-    }
-  });
-}
-
-recognition.onerror = (event) => {
-  if (event.error === 'not-allowed') {
-    statusDiv.innerText = "Mic blocked! Opening setup tab...";
-    chrome.tabs.create({ url: chrome.runtime.getURL('setup.html') });
-  } else {
-    statusDiv.innerText = `Error: ${event.error}. Try again.`;
-  }
-};
-

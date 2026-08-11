@@ -8,7 +8,8 @@
         "activeTab",
         "scripting",
         "sidePanel",
-        "tabs"
+        "tabs",
+        "tts"
     ],
 
     "host_permissions": [

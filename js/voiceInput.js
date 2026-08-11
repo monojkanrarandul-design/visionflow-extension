@@ -1,3 +1,7 @@
+import callAPI from "./api.js";
+import { get_snapshot } from "./tools/snapshot.js";
+// import {startListening, stopListening } from "./voiceInput"
+
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 if (!SpeechRecognition) {
@@ -19,25 +23,25 @@ let finalTranscript = "";
 let silenceTimer = null;
 let lastSentTranscript = "";
 
-const SILENCE_DELAY = 4000;
+const SILENCE_DELAY = 2000;
 
-function startListening() {
+export function startListening() {
     if (isListening) return;
     recognition.start();
 }
 
-function stopListening() {
+export function stopListening() {
     recognition.stop()
 }
 
 recognition.onstart = () => {
     isListening = true;
-    console.log("listening")
+    document.querySelector(".status").innerHTML = "Listening...";
 }
 
 recognition.onend = () => {
     isListening = false;
-    console.log("listening");
+    document.querySelector(".status").innerHTML = "Listening...";
 
     setTimeout(() => {
         if (!isListening) {
@@ -48,12 +52,11 @@ recognition.onend = () => {
 
 recognition.onerror = (event) => {
     console.log("Speech Error:", event.error);
-
-    // Ignore "no-speech" errors.
     if (event.error === "no-speech") return;
 };
 
-recognition.onstart = (event) => {
+recognition.onresult = (event) => {
+    console.log(event);
     let interimTranscript = "";
     for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
@@ -67,6 +70,7 @@ recognition.onstart = (event) => {
     console.clear();
     console.log("Final:", finalTranscript);
     console.log("Interim:", interimTranscript);
+    document.querySelector(".status").innerHTML = `${interimTranscript}`
 
     // Reset silence timer
     clearTimeout(silenceTimer);
@@ -83,13 +87,11 @@ recognition.onstart = (event) => {
         lastSentTranscript = message;
 
         console.log("Sending:", message);
+        document.querySelector(".status").innerHTML = `<strong>Sending: </strong> ${message}`
 
         try {
-
-            // Replace with your backend call
-            
-
-            
+            // backend call
+            callAPI(message)
 
         } catch (err) {
             console.error(err);
@@ -100,3 +102,5 @@ recognition.onstart = (event) => {
 
     }, SILENCE_DELAY);
 }
+
+export default {startListening, stopListening};
