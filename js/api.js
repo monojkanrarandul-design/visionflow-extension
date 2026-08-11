@@ -1,4 +1,6 @@
 import apiRequest from "./utils/fetch_api.js";
+import get_snapshot from "./tools/snapshot.js";
+
 
 const baseUrl = "https://visionflowapi.vercel.app"
 // stage 1
@@ -34,7 +36,7 @@ async function visualPlanner({snapshot = "", intent, message}) {
 }
 
 export default async function callAPI(message){
-    const res = await verifyIntent(message);
+    const res = await planner(message);
     console.log(await res);
 
     const response = await getActions({
@@ -42,7 +44,7 @@ export default async function callAPI(message){
         message: message,
         snapshot: (await res.snapshot)? await get_snapshot() : ""
     })
-    
+
     console.log(JSON.stringify(await response));
     document.querySelector(".markdown").innerHTML = marked.parse((await response).markdown);
     const utterance = new SpeechSynthesisUtterance(((await response).message));

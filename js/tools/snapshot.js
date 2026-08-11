@@ -37,7 +37,7 @@ function normalizeHref(href, baseUrl) {
 
 const GENERIC_IDS = new Set(['endpoint', 'button', 'thumbnail', 'content', 'container', 'video-title-link']);
 
-export async function get_snapshot() {
+export default async function get_snapshot() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   const results = await chrome.scripting.executeScript({

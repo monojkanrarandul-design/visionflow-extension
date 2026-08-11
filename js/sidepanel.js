@@ -26,7 +26,15 @@ let html = `
 </button>
 `;
 
+let listening = false;
+
 startBtn.onclick = () => {
+  if(!listening){
     container.innerHTML = html;
+    listening = true;
     startListening();
+  } else {
+    listening = false;
+    stopListening();
+  }
 }

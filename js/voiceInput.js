@@ -1,5 +1,4 @@
 import callAPI from "./api.js";
-import { get_snapshot } from "./tools/snapshot.js";
 // import {startListening, stopListening } from "./voiceInput"
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -78,7 +77,6 @@ recognition.onresult = (event) => {
     silenceTimer = setTimeout(async () => {
 
         const message = finalTranscript.trim();
-
         if (message === "" || message === lastSentTranscript || isSending) {
             return;
         }
