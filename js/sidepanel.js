@@ -29,12 +29,7 @@ let html = `
 let listening = false;
 
 startBtn.onclick = () => {
-  if(!listening){
     container.innerHTML = html;
     listening = true;
     startListening();
-  } else {
-    listening = false;
-    stopListening();
-  }
 }

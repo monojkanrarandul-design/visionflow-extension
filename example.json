@@ -1,62 +1,14 @@
 {
     "actions": [
         {
-            "action": "fill-data",
-            "data": "AI news",
-            "selector": "input[name='search_query']",
-            "type": "input"
-        },
-        {
-            "action": "press",
-            "selector": "button#search-icon-legacy",
-            "type": "button"
+            "action": "click",
+            "selector": "a[href='/watch?v=PYGjo1gA5Ns']",
+            "type": "click"
         }
     ],
     "confidence": 1,
-    "message": "I have searched YouTube for the latest AI news for you.",
-    "status": "found"
-}
-
-{
-    "actions": [
-        {
-            "action": "navigate",
-            "data": "https://www.youtube.com",
-            "selector": "window",
-            "type": "navigation"
-        }
-    ],
-    "confidence": 1,
-    "message": "Navigating to YouTube now.",
-    "status": "found"
-}
-
-{
-    "actions": [
-        {
-            "action": "fill-data",
-            "data": "https://www.youtube.com",
-            "selector": "input[name='search_query']",
-            "type": "input"
-        },
-        {
-            "action": "press",
-            "selector": "button#search-icon-legacy",
-            "type": "button"
-        },
-        {
-            "action": "fill-data",
-            "data": "Yahi news",
-            "selector": "input[name='search_query']",
-            "type": "input"
-        },
-        {
-            "action": "press",
-            "selector": "button#search-icon-legacy",
-            "type": "button"
-        }
-    ],
-    "confidence": 1,
-    "message": "I have navigated to YouTube and searched for Yahi news for you.",
+    "markdown": "",
+    "message": "I have clicked on the video titled 'THE GOAT IS BACK'.",
+    "reason": "The video with the text 'THE GOAT IS BACK' matches the user's intent to find the video where the goat is back.",
     "status": "found"
 }

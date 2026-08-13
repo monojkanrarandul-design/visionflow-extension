@@ -1,144 +1,202 @@
-export function executeUserAction(command) {
-  console.log("VisionFlow AI executing command:", command);
-  const lowerCmd = command.toLowerCase();
+// Available Actions List
+const actions = {
+  "navigation": navigation,
+  "tab": tab,
+  "scroll": scroll,
+  "click": click,
+  "input": input,
+  "keyboard": keyboard,
+  "select": select,
+  "checkbox": checkbox,
+  "hover": hover
+};
 
-  // Highlight and focus helper
-  function applyGlow(el, value) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.focus();
-    if (value !== undefined) {
-      el.value = value;
-      // Trigger native input events so framework sites update UI
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    el.style.transition = "all 0.3s ease";
-    el.style.border = "4px solid #22c55e";
-    el.style.boxShadow = "0 0 20px rgba(34, 197, 94, 0.9)";
+export default async function execute(action) {
+  const fn = actions[action.type];
+
+  if (!fn) {
+    throw new Error(`Unknown action: ${action.type}`);
   }
 
-  // --- A. SCROLL LOGIC ---
-  if (lowerCmd.includes("scroll down")) {
-    window.scrollBy({ top: 500, behavior: 'smooth' });
-    return;
-  } else if (lowerCmd.includes("scroll up")) {
-    window.scrollBy({ top: -500, behavior: 'smooth' });
-    return;
-  }
-
-  // --- B. SUBMIT / CLICK LOGIC ---
-  if (lowerCmd.includes("submit") || lowerCmd==="click" || lowerCmd.includes("enter")) {
-    const btn = document.querySelector('button[type="submit"], input[type="submit"], button.searchButton, button');
-    if (btn) {
-      applyGlow(btn);
-      setTimeout(() => btn.click(), 500);
-    }
-    
-    if (document.activeElement) {
-        const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true });
-        document.activeElement.dispatchEvent(enterEvent);
-    }
-    return; 
-  }
-
-  // --- C. VIDEO CONTROL LOGIC ---
-  const video = Array.from(document.querySelectorAll('video')).find(v=>v.offsetWidth > 0);
-  
-  if (video) {
-    // 1. Play / Pause
-    if (lowerCmd.includes("play video") || lowerCmd.includes("pause") || lowerCmd.includes("click video")) {
-      video.paused ? video.play() : video.pause();
-      applyGlow(video);
-      return; 
-    }
-
-    // 2. Absolute Timeskip (e.g., "go to 2 minutes 30 seconds")
-    if (lowerCmd.match(/(go to|skip to|time skip)/)) {
-      let totalSeconds = 0;
-      const minMatch = lowerCmd.match(/(\d+)\s*(m|min|minute)/);
-      const secMatch = lowerCmd.match(/(\d+)\s*(s|sec|second)/);
-      
-      if (minMatch) totalSeconds += parseInt(minMatch[1], 10) * 60;
-      if (secMatch) totalSeconds += parseInt(secMatch[1], 10);
-      
-      if (totalSeconds > 0 || lowerCmd.includes("0")) {
-        video.currentTime = totalSeconds;
-        applyGlow(video);
-        return;
-      }
-    }
-
-    // 3. Relative Timeskip (e.g., "skip forward 10 seconds")
-    if (lowerCmd.includes("forward") || lowerCmd.includes("back") || lowerCmd.includes("rewind") || lowerCmd.includes("skip")) {
-      const numMatch = lowerCmd.match(/(\d+)/);
-      const skipAmount = numMatch ? parseInt(numMatch[1], 10) : 10; 
-      
-      if (lowerCmd.includes("back") || lowerCmd.includes("rewind") || lowerCmd.includes("-")) {
-        video.currentTime -= skipAmount;
-      } else {
-        video.currentTime += skipAmount;
-      }
-      applyGlow(video);
-      return;
-    }
-
-    // 4. Volume Controls
-    if (lowerCmd.includes("mute") || lowerCmd.includes("volume")) {
-      if (lowerCmd.includes("unmute")) {
-        video.muted = false;
-      } else if (lowerCmd === "mute" || lowerCmd.includes("mute video")) {
-        video.muted = true;
-      }
-      
-      if (lowerCmd.includes("volume up") || lowerCmd.includes("increase volume")) {
-        video.muted = false;
-        video.volume = Math.min(1.0, video.volume + 0.2);
-      } else if (lowerCmd.includes("volume down") || lowerCmd.includes("decrease volume")) {
-        video.volume = Math.max(0.0, video.volume - 0.2);
-      }
-      
-      const volMatch = lowerCmd.match(/volume.*?(\d+)/);
-      if (volMatch) {
-        let targetVol = parseInt(volMatch[1], 10);
-        video.muted = false;
-        video.volume = Math.max(0.0, Math.min(1.0, targetVol / 100));
-      }
-      applyGlow(video);
-      return;
-    }
-  } 
-  // 5. Thumbnail Fallback (For YouTube Search Result Pages)
-  else if (!video && (lowerCmd.includes("play") || lowerCmd.includes("click video"))) {
-    const thumbnail=document.querySelector('a#thumbnail[href*="/watch"]');
-    if(thumbnail){
-      applyGlow(thumbnail);
-      setTimeout(() => thumbnail.click(), 500);
-      return;
-    }
-  }
-
-  // --- D. SMART SEARCH & FILL LOGIC ---
-  let queryText = command;
-  if (lowerCmd.includes("search ")) {
-    queryText = command.substring(lowerCmd.indexOf("search ") + 7);
-  } else if (lowerCmd.includes("is ")) {
-    queryText = command.split(/is /i).pop();
-  }
-
-  const allInputs = Array.from(document.querySelectorAll('input:not([type="hidden"]), textarea:not([type="hidden"])'));
-  
-  let targetInput = allInputs.find(i => {
-    const attr = (i.name + i.id + i.placeholder + i.type + i.className).toLowerCase();
-    return attr.includes("search") || attr.includes("q") || attr.includes("name");
+  const [activeTab] = await chrome.tabs.query({
+    active: true,
+    currentWindow: true
   });
 
-  if (!targetInput) {
-    targetInput = allInputs.find(i => i.offsetWidth > 0);
+  return await fn(action, activeTab);
+}
+
+// --- Snapshot-independent (unchanged) ---
+
+async function navigation(action, tab) {
+  switch (action.action) {
+    case "navigate":
+      if (!action.data) throw new Error("navigate requires a URL in data");
+      return chrome.tabs.update(tab.id, { url: normalizeUrl(action.data) });
+    case "go_back":
+      return chrome.tabs.goBack(tab.id);
+    case "go_forward":
+      return chrome.tabs.goForward(tab.id);
+    default:
+      throw new Error(`Unknown navigation action: ${action.action}`);
+  }
+}
+
+async function tab(action, currentTab) {
+  switch (action.action) {
+    case "new_tab":
+      return chrome.tabs.create({ url: action.data ? normalizeUrl(action.data) : undefined });
+    case "close_tab":
+      return chrome.tabs.remove(currentTab.id);
+    case "reload":
+      return chrome.tabs.reload(currentTab.id);
+    default:
+      throw new Error(`Unknown tab action: ${action.action}`);
+  }
+}
+
+async function scroll(action, tab) {
+  if (action.action === "scroll_to") {
+    if (!action.selector) throw new Error("scroll_to requires a selector");
+    return runInPage(tab, (selector) => {
+      const el = document.querySelector(selector);
+      if (!el) throw new Error(`Element not found: ${selector}`);
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, [action.selector]);
   }
 
-  if (targetInput) {
-    applyGlow(targetInput, queryText);
-  } else {
-    console.warn("VisionFlow AI: No input element found on this page.");
-  }
+  const DEFAULT_PIXELS = 500;
+  const pixels = Number(action.data) > 0 ? Number(action.data) : DEFAULT_PIXELS;
+  const delta = action.action === "scroll_up" ? -pixels
+              : action.action === "scroll_down" ? pixels
+              : null;
+
+  if (delta === null) throw new Error(`Unknown scroll action: ${action.action}`);
+
+  return runInPage(tab, (amount) => {
+    window.scrollBy({ top: amount, left: 0, behavior: "instant" });
+  }, [delta]);
+}
+
+// --- Snapshot-dependent ---
+
+async function click(action, tab) {
+  if (!action.selector) throw new Error("click requires a selector");
+
+  return runInPage(tab, (selector) => {
+    const el = document.querySelector(selector);
+    if (!el) throw new Error(`Element not found: ${selector}`);
+    el.scrollIntoView({ behavior: "instant", block: "center" });
+    el.click();
+  }, [action.selector]);
+}
+
+async function input(action, tab) {
+  if (!action.selector) throw new Error("fill_data requires a selector");
+
+  return runInPage(tab, (selector, value) => {
+    const el = document.querySelector(selector);
+    if (!el) throw new Error(`Element not found: ${selector}`);
+
+    el.focus();
+
+    const proto = el.tagName === "TEXTAREA"
+      ? window.HTMLTextAreaElement.prototype
+      : window.HTMLInputElement.prototype;
+    const nativeSetter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+
+    if (nativeSetter) {
+      nativeSetter.call(el, value);
+    } else {
+      el.value = value; // fallback for non-standard/custom elements
+    }
+
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }, [action.selector, action.data ?? ""]);
+}
+
+async function keyboard(action, tab) {
+  const key = action.data;
+  if (!key) throw new Error("press requires a key in data");
+
+  return runInPage(tab, (selector, key) => {
+    const target = (!selector || selector === "window")
+      ? document.activeElement || document.body
+      : document.querySelector(selector);
+
+    if (!target) throw new Error(`Element not found: ${selector}`);
+
+    const opts = { key, bubbles: true, cancelable: true };
+    target.dispatchEvent(new KeyboardEvent("keydown", opts));
+    target.dispatchEvent(new KeyboardEvent("keypress", opts));
+    target.dispatchEvent(new KeyboardEvent("keyup", opts));
+
+    // Synthetic Enter rarely triggers native form submission — fall back
+    // to submitting the enclosing form directly when applicable.
+    if (key === "Enter") {
+      const form = target.closest?.("form");
+      if (form) form.requestSubmit();
+    }
+  }, [action.selector, key]);
+}
+
+async function select(action, tab) {
+  if (!action.selector) throw new Error("select_dropdown requires a selector");
+
+  return runInPage(tab, (selector, value) => {
+    const el = document.querySelector(selector);
+    if (!el) throw new Error(`Element not found: ${selector}`);
+
+    let option = [...el.options].find(o => o.value === value);
+    if (!option) option = [...el.options].find(o => o.textContent.trim() === value);
+    if (!option) throw new Error(`No matching option for: ${value}`);
+
+    el.value = option.value;
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }, [action.selector, action.data ?? ""]);
+}
+
+async function checkbox(action, tab) {
+  if (!action.selector) throw new Error("toggle_checkbox requires a selector");
+
+  return runInPage(tab, (selector, data) => {
+    const el = document.querySelector(selector);
+    if (!el) throw new Error(`Element not found: ${selector}`);
+
+    const desired = data === "true" ? true
+                  : data === "false" ? false
+                  : !el.checked; // no data -> toggle
+
+    if (el.checked !== desired) {
+      el.click(); // fires native change/input listeners correctly
+    }
+  }, [action.selector, action.data ?? ""]);
+}
+
+async function hover(action, tab) {
+  if (!action.selector) throw new Error("hover requires a selector");
+
+  return runInPage(tab, (selector) => {
+    const el = document.querySelector(selector);
+    if (!el) throw new Error(`Element not found: ${selector}`);
+    el.scrollIntoView({ behavior: "instant", block: "center" });
+    el.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    el.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+  }, [action.selector]);
+}
+
+// --- Helpers ---
+
+function normalizeUrl(url) {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
+async function runInPage(tab, func, args = []) {
+  const [{ result } = {}] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func,
+    args
+  });
+  return result;
 }
