@@ -28,6 +28,14 @@ let html = `
 
 let listening = false;
 
+navigator.permissions.query({ name: "microphone" })
+  .then((permissionStatus) => {
+    console.log("Microphone permission:", permissionStatus.state);
+    if(permissionStatus.state != "granted"){
+      window.open("setup.html", "_blank");
+    }
+  });
+
 startBtn.onclick = () => {
     container.innerHTML = html;
     listening = true;

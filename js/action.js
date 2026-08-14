@@ -86,8 +86,30 @@ async function click(action, tab) {
   return runInPage(tab, (selector) => {
     const el = document.querySelector(selector);
     if (!el) throw new Error(`Element not found: ${selector}`);
-    el.scrollIntoView({ behavior: "instant", block: "center" });
-    el.click();
+
+    const target = findClickTarget(el);
+    target.scrollIntoView({ behavior: "instant", block: "center" });
+    target.click();
+
+    function findClickTarget(el) {
+      // If the matched element is itself natively clickable, use it directly
+      if (isNativelyClickable(el)) return el;
+
+      // Otherwise look for a clickable descendant
+      const inner = el.querySelector('button, input, a[href], [role="button"], [role="link"], [role="menuitem"], summary');
+      if (inner) return inner;
+
+      // Fall back to the original element (e.g. divs with onclick handlers)
+      return el;
+    }
+
+    function isNativelyClickable(el) {
+      const tag = el.tagName.toLowerCase();
+      if (['button', 'a', 'input', 'summary'].includes(tag)) return true;
+      const role = el.getAttribute('role');
+      if (role && ['button', 'link', 'menuitem', 'checkbox', 'radio', 'tab'].includes(role)) return true;
+      return false;
+    }
   }, [action.selector]);
 }
 

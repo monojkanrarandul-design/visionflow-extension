@@ -39,14 +39,13 @@ recognition.onstart = () => {
 }
 
 recognition.onend = () => {
-    isListening = false;
     document.querySelector(".status").innerHTML = "Not Listening...";
 
     setTimeout(() => {
         if (!isListening) {
             recognition.start();
         }
-    }, 7000);
+    }, 5000);
 }
 
 recognition.onerror = (event) => {
@@ -89,7 +88,7 @@ recognition.onresult = (event) => {
 
         try {
             // backend call
-            callAPI(message)
+            isListening = callAPI(message)
         } catch (err) {
             console.error(err);
         }

@@ -71,14 +71,14 @@ function waitForTabLoad(tabId, timeout = 15000) {
 
 // API call - 
 export default async function callAPI(message){
-    stopListening();
+    
     let contextMemory = getMemory();
     const [activeTab] = await chrome.tabs.query({
         active: true,
         currentWindow: true
     });
     console.log("Memory: " + contextMemory);
-
+    stopListening();
     const res_1 = await planner({
         message: message,
         context: contextMemory,
@@ -100,7 +100,7 @@ export default async function callAPI(message){
     await waitForTabLoad(activeTab.id);
     
     if (res_1.snapshotRequired) {
-        stopListening();
+        
         const res_2 = await visualPlanner({
             snapshot: await get_snapshot(),
             intent: res_1.intent,
@@ -115,11 +115,6 @@ export default async function callAPI(message){
                 await execute(action);
             }
         }
-        // startListening();
     }
-    
-
-    
-
+    return true
 }
-
